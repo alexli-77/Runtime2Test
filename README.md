@@ -1,12 +1,10 @@
 <div align="center">
-  <h1>ProDJ</h1>
+  <h1>Runtime2Test</h1>
 </div>
 
-`ProDJ` is a tool for serializing Java objects to plain code.
-It uses these capabilities to automatically generate test-cases from a
-production workload.
+`Runtime2Test` is a tool that automatically converts real-world Java object behaviors during runtime into replayable test code. We utilize a combined approach of ProDJ + LLM. The objective is to generate test cases that are grounded in production-level workloads and realistic scenarios.
 
-See [Serializing Java Objects in Plain Code](http://arxiv.org/pdf/2405.11294) (Julian Wachter, Deepika Tiwari, Martin Monperrus and Benoit Baudry), Journal of Software and Systems, 2025.
+Reference: [Serializing Java Objects in Plain Code](http://arxiv.org/pdf/2405.11294) (Julian Wachter, Deepika Tiwari, Martin Monperrus and Benoit Baudry), Journal of Software and Systems, 2025.
 
 ```bibtex
 @article{2405.11294,
@@ -20,7 +18,7 @@ See [Serializing Java Objects in Plain Code](http://arxiv.org/pdf/2405.11294) (J
 ```
 
 ## Setup
-The easiest way to get an executable version of `ProDJ` is to use the provided
+The easiest way to get an executable version of `Runtime2Test` is to use the provided
 `flake.nix`:
 1. Enter a dev-shell using `nix develop`
 2. Run `java -jar rockstofetch/target/rockstofetch.jar --statistics <config file>`.
@@ -46,7 +44,7 @@ Compile and package : mvn -DskipTests package
 
 Step 2:
 
-Put the prodj\rockstofetch\src\test\resources\CodeMonkey.pdf to the root path of the Pdfbox
+Put the Runtime2Test\rockstofetch\src\test\resources\CodeMonkey.pdf to the root path of the Pdfbox
 
 Step 3:
 
