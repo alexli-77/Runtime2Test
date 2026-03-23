@@ -167,8 +167,7 @@ public class Main {
     Instant generateStart = Instant.now();
     Generation.generate(
         methodsJsonPath, testBasePath,
-        config.usedEquality(),
-        config.filterTests(),
+      config,
         statistics
     );
     addStatDuration(statistics, "generate", generateStart);

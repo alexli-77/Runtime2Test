@@ -11,6 +11,7 @@ import se.kth.castor.rockstofetch.instrument.InstrumentationConfiguration;
 import se.kth.castor.rockstofetch.instrument.RecordedMethod;
 import se.kth.castor.rockstofetch.serialization.Json;
 import se.kth.castor.rockstofetch.serialization.RockySerializer;
+import se.kth.castor.rockstofetch.staticdata.StaticDataCollector;
 import se.kth.castor.rockstofetch.util.SpoonAccessor;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -59,6 +60,13 @@ public class Prepare {
         ))
         .filter(it -> receiverStructureBasedIfVoid(serializer, it))
         .toList();
+
+    Path staticSnapshotPath = new StaticDataCollector().writeSnapshot(
+      dataPath,
+      projectPath,
+      candidates
+    );
+    System.out.println("Wrote static snapshot: " + staticSnapshotPath.toAbsolutePath());
 
     System.out.printf(
         "Found %d candidates and %d total methods. Keeping %d after pruning.%n",

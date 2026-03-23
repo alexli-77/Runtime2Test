@@ -2,6 +2,7 @@ package se.kth.castor.rockstofetch.cli;
 
 import static se.kth.castor.pankti.codemonkey.util.Statistics.addStatDuration;
 
+import se.kth.castor.rockstofetch.cli.Config.GenerationMode;
 import se.kth.castor.rockstofetch.cli.Config.EqualityFunction;
 import se.kth.castor.rockstofetch.generate.DataReader;
 import se.kth.castor.rockstofetch.generate.DataReader.LoadedInvocation;
@@ -16,11 +17,16 @@ import se.kth.castor.rockstofetch.generate.JunitTestMethodParameterOracle;
 import se.kth.castor.rockstofetch.generate.PostProcessor;
 import se.kth.castor.rockstofetch.generate.TestFilterer;
 import se.kth.castor.rockstofetch.instrument.InstrumentationConfiguration;
+import se.kth.castor.rockstofetch.llm.LlmGeneratedFile;
+import se.kth.castor.rockstofetch.llm.LlmTestResponse;
+import se.kth.castor.rockstofetch.llm.StaticLlmClient;
 import se.kth.castor.rockstofetch.serialization.Json;
 import se.kth.castor.rockstofetch.serialization.RockySerializer;
+import se.kth.castor.rockstofetch.staticdata.StaticDataCollector;
 import se.kth.castor.rockstofetch.util.SpoonAccessor;
 import se.kth.castor.rockstofetch.util.Spoons;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,7 +72,7 @@ public class Generation {
       .replace("/", ".");
 
   public static void generate(
-      Path methodsJson, Path testBasePath, EqualityFunction equality, boolean filterTests,
+      Path methodsJson, Path testBasePath, Config config,
       Statistics statistics
   ) throws IOException {
     InstrumentationConfiguration instrumentationConfiguration = Objects.requireNonNull(
@@ -74,6 +80,36 @@ public class Generation {
     );
     Path projectPath = instrumentationConfiguration.projectPath();
     Path dataPath = instrumentationConfiguration.dataPath();
+
+    GenerationMode mode = config.generationModeOrDefault();
+    if (mode == GenerationMode.LLM_FIRST_STATIC && config.llmEndpoint() != null
+        && !config.llmEndpoint().isBlank()) {
+      try {
+        generateWithStaticLlm(config, projectPath, dataPath, testBasePath);
+        return;
+      } catch (RuntimeException | IOException | InterruptedException e) {
+        System.out.println("LLM static generation failed, falling back to RULE_ONLY: " + e);
+      }
+    }
+
+    generateWithRecordedInvocations(
+        testBasePath,
+        config.usedEqualityOrDefault(),
+        config.filterTests(),
+        statistics,
+        projectPath,
+        dataPath
+    );
+  }
+
+  private static void generateWithRecordedInvocations(
+      Path testBasePath,
+      EqualityFunction equality,
+      boolean filterTests,
+      Statistics statistics,
+      Path projectPath,
+      Path dataPath
+  ) throws IOException {
 
     Instant invocationReadStart = Instant.now();
     List<LoadedInvocation> invocations = new DataReader()
@@ -195,6 +231,58 @@ public class Generation {
       Files.writeString(testPath, testClass.toStringWithImports());
     }
     addStatDuration(statistics, "write", writeStart);
+  }
+
+  private static void generateWithStaticLlm(
+      Config config,
+      Path projectPath,
+      Path dataPath,
+      Path testBasePath
+  ) throws IOException, InterruptedException {
+    Path staticSnapshot = dataPath.resolve(StaticDataCollector.STATIC_SNAPSHOT_FILE);
+    if (!Files.exists(staticSnapshot)) {
+      throw new IOException("Missing static snapshot: " + staticSnapshot.toAbsolutePath());
+    }
+
+    LlmTestResponse response = new StaticLlmClient().generateTests(
+        URI.create(config.llmEndpoint()),
+        projectPath,
+        staticSnapshot,
+        config.usedEqualityOrDefault().name(),
+        config.llmTimeoutMsOrDefault(),
+        config.llmMaxRetryOrDefault()
+    );
+
+    if (!response.success()) {
+      throw new RuntimeException("LLM response unsuccessful: " + response.message());
+    }
+
+    clearGeneratedTests(testBasePath);
+    writeGeneratedFiles(testBasePath, response.files());
+  }
+
+  private static void clearGeneratedTests(Path testBasePath) throws IOException {
+    try (Stream<Path> paths = Files.walk(testBasePath)) {
+      for (Path path : paths.filter(it -> it.toString().endsWith("RockyTest.java")).toList()) {
+        Files.delete(path);
+      }
+    }
+  }
+
+  private static void writeGeneratedFiles(Path testBasePath, List<LlmGeneratedFile> files)
+      throws IOException {
+    for (LlmGeneratedFile file : files) {
+      if (file.relativePath() == null || file.relativePath().isBlank()) {
+        continue;
+      }
+      Path out = testBasePath.resolve(file.relativePath()).normalize();
+      if (!out.startsWith(testBasePath.normalize())) {
+        throw new IOException("Refusing to write outside test base path: " + file.relativePath());
+      }
+      Files.createDirectories(out.getParent());
+      Files.writeString(out, file.content() == null ? "" : file.content());
+      System.out.println("Writing " + out.toAbsolutePath());
+    }
   }
 
   private static void tryAddMethod(Runnable creationAction) {

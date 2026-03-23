@@ -33,6 +33,10 @@ public class Callgraph {
     return callgraph.predecessors(method);
   }
 
+  public Set<CtMethod<?>> getDirectCallees(CtMethod<?> method) {
+    return callgraph.successors(method);
+  }
+
   public boolean calledByTest(CtMethod<?> method) {
     return Graphs.reachableNodes(Graphs.transpose(callgraph), method)
         .stream()
@@ -59,6 +63,9 @@ public class Callgraph {
   private static void buildEdgesForMethod(
       CtType<?> type, MutableGraph<CtMethod<?>> graph, CtMethod<?> method
   ) {
+    if (method.getBody() == null) {
+      return;
+    }
     for (var invocation : method.getBody().getElements(new TypeFilter<>(CtInvocation.class))) {
       CtTypeReference<?> declaringType = invocation.getExecutable().getDeclaringType();
       if (!declaringType.getQualifiedName().equals(type.getQualifiedName())) {
