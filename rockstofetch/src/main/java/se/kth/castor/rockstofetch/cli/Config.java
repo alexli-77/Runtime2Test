@@ -16,7 +16,10 @@ public record Config(
   GenerationMode generationMode,
   String llmEndpoint,
   Integer llmTimeoutMs,
-  Integer llmMaxRetry
+  Integer llmMaxRetry,
+  Integer hybridMaxMethods,
+  Integer hybridMaxFactsPerMethod,
+  Boolean hybridIncludeRawEvents
 ) {
 
   public enum EqualityFunction {
@@ -27,7 +30,8 @@ public record Config(
 
   public enum GenerationMode {
     RULE_ONLY,
-    LLM_FIRST_STATIC
+    LLM_FIRST_STATIC,
+    HYBRID_DYNAMIC
   }
 
   public GenerationMode generationModeOrDefault() {
@@ -40,6 +44,18 @@ public record Config(
 
   public int llmMaxRetryOrDefault() {
     return llmMaxRetry == null ? 1 : llmMaxRetry;
+  }
+
+  public int hybridMaxMethodsOrDefault() {
+    return hybridMaxMethods == null ? 100 : hybridMaxMethods;
+  }
+
+  public int hybridMaxFactsPerMethodOrDefault() {
+    return hybridMaxFactsPerMethod == null ? 20 : hybridMaxFactsPerMethod;
+  }
+
+  public boolean hybridIncludeRawEventsOrDefault() {
+    return hybridIncludeRawEvents != null && hybridIncludeRawEvents;
   }
 
   public EqualityFunction usedEqualityOrDefault() {

@@ -15,8 +15,10 @@ import se.kth.castor.rockstofetch.generate.JunitTestClass;
 import se.kth.castor.rockstofetch.generate.JunitTestMethodOutputOracle;
 import se.kth.castor.rockstofetch.generate.JunitTestMethodParameterOracle;
 import se.kth.castor.rockstofetch.generate.PostProcessor;
+import se.kth.castor.rockstofetch.generate.RuntimeFactsBuilder;
 import se.kth.castor.rockstofetch.generate.TestFilterer;
 import se.kth.castor.rockstofetch.instrument.InstrumentationConfiguration;
+import se.kth.castor.rockstofetch.llm.HybridLlmClient;
 import se.kth.castor.rockstofetch.llm.LlmGeneratedFile;
 import se.kth.castor.rockstofetch.llm.LlmTestResponse;
 import se.kth.castor.rockstofetch.llm.StaticLlmClient;
@@ -89,6 +91,16 @@ public class Generation {
         return;
       } catch (RuntimeException | IOException | InterruptedException e) {
         System.out.println("LLM static generation failed, falling back to RULE_ONLY: " + e);
+      }
+    }
+
+    if (mode == GenerationMode.HYBRID_DYNAMIC && config.llmEndpoint() != null
+        && !config.llmEndpoint().isBlank()) {
+      try {
+        generateWithHybridLlm(config, projectPath, dataPath, testBasePath);
+        return;
+      } catch (RuntimeException | IOException | InterruptedException e) {
+        System.out.println("LLM hybrid generation failed, falling back to RULE_ONLY: " + e);
       }
     }
 
@@ -251,6 +263,44 @@ public class Generation {
         config.usedEqualityOrDefault().name(),
         config.llmTimeoutMsOrDefault(),
         config.llmMaxRetryOrDefault()
+    );
+
+    if (!response.success()) {
+      throw new RuntimeException("LLM response unsuccessful: " + response.message());
+    }
+
+    clearGeneratedTests(testBasePath);
+    writeGeneratedFiles(testBasePath, response.files());
+  }
+
+  private static void generateWithHybridLlm(
+      Config config,
+      Path projectPath,
+      Path dataPath,
+      Path testBasePath
+  ) throws IOException, InterruptedException {
+    Path staticSnapshot = dataPath.resolve(StaticDataCollector.STATIC_SNAPSHOT_FILE);
+    if (!Files.exists(staticSnapshot)) {
+      throw new IOException("Missing static snapshot: " + staticSnapshot.toAbsolutePath());
+    }
+
+    String runtimeFacts = new RuntimeFactsBuilder().buildFacts(
+        dataPath,
+        config.hybridMaxMethodsOrDefault(),
+        config.hybridMaxFactsPerMethodOrDefault()
+    );
+
+    LlmTestResponse response = new HybridLlmClient().generateTests(
+        URI.create(config.llmEndpoint()),
+        projectPath,
+        staticSnapshot,
+        runtimeFacts,
+        config.usedEqualityOrDefault().name(),
+        config.llmTimeoutMsOrDefault(),
+        config.llmMaxRetryOrDefault(),
+        config.hybridMaxMethodsOrDefault(),
+        config.hybridMaxFactsPerMethodOrDefault(),
+        config.hybridIncludeRawEventsOrDefault()
     );
 
     if (!response.success()) {
