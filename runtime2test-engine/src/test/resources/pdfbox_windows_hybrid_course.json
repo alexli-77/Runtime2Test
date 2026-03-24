@@ -1,0 +1,19 @@
+{
+  "filterTests": true,
+  "ignoreCoverage": true,
+  "usedEquality": "ASSERT_J_DEEP",
+  "generationMode": "HYBRID_DYNAMIC",
+  "llmEndpoint": "https://your-colab-endpoint/generation",
+  "llmTimeoutMs": 60000,
+  "llmMaxRetry": 2,
+  "hybridMaxMethods": 100,
+  "hybridMaxFactsPerMethod": 20,
+  "hybridIncludeRawEvents": false,
+  "hybridEnableRuntimeFacts": false,
+  "projectPath": "C:/Software Engineering/pdfbox",
+  "methodsJson": "rtf/methods.json",
+  "dataPath": "rtf/data",
+  "testBasePath": "rtf/generated-tests/src/test/java",
+  "productionCommand": "call \"{{config_dir}}\\run_pdfbox_windows.cmd\" {{agent_call}}",
+  "additionalInstrumentedPackages": []
+}

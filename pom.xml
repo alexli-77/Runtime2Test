@@ -5,7 +5,7 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>se.kth.castor</groupId>
+  <groupId>org.threeTesters.runtime2test</groupId>
   <artifactId>prodj</artifactId>
   <packaging>pom</packaging>
   <version>0.0.1</version>
@@ -41,8 +41,8 @@
   </dependencies>
 
   <modules>
-    <module>code-monkey</module>
-    <module>rockstofetch</module>
+    <module>runtime2test-construction</module>
+    <module>runtime2test-engine</module>
   </modules>
 
 </project>
