@@ -76,33 +76,10 @@ I'm working on integrating CodeT5-base to this pipeline. CodeT5-base is a Transf
 
 Reference：[Wang, Yue, et al. "Codet5: Identifier-aware unified pre-trained encoder-decoder models for code understanding and generation." ](2021.https://aclanthology.org/2021.emnlp-main.685.pdf)
 
-Github: [CodeT5](https://github.com/salesforce/CodeT5)
+Github: [chatunitest-models](https://colab.research.google.com/drive/1vxEPDWy57nkjCusNUEQuzfav5OFzdBNz?usp=sharing)
 
-Hugging Face: [CodeT5-base](https://huggingface.co/Salesforce/codet5-base)
 
-So CodeT5-base contains approximately 220 million parameters.Typical architecture configuration:
-
-- Encoder–Decoder Transformer
-
-- 12 encoder layers
-
-- 12 decoder layers
-  
-- Hidden size ≈ 768
-  
-- Attention heads ≈ 12
-
-This configuration is very similar to T5-base.
-
-## test the LLM
-
-Environment: python (see the runtime2test-engine/test/resourses/LLM/requirements.txt) + CodeT5.
-
-Get LLM: run test_codet5.py (see the runtime2test-engine/test/resourses/LLM/test_code5.py).
-
-Run LLM Service: run t5_service.py (see the runtime2test-engine/test/resourses/LLM/t5_service.py).
-
-## Hybrid-Dynamic Configuration (English Guide)
+## Hybrid-Dynamic Configuration 
 
 Runtime2Test now supports three generation modes:
 
