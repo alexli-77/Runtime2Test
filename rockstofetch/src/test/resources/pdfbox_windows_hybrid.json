@@ -9,6 +9,7 @@
   "hybridMaxMethods": 100,
   "hybridMaxFactsPerMethod": 20,
   "hybridIncludeRawEvents": false,
+  "hybridEnableRuntimeFacts": true,
   "projectPath": "C:/Software Engineering/pdfbox",
   "methodsJson": "rtf/methods.json",
   "dataPath": "rtf/data",

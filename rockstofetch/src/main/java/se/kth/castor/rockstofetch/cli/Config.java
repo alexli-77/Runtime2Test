@@ -19,7 +19,8 @@ public record Config(
   Integer llmMaxRetry,
   Integer hybridMaxMethods,
   Integer hybridMaxFactsPerMethod,
-  Boolean hybridIncludeRawEvents
+  Boolean hybridIncludeRawEvents,
+  Boolean hybridEnableRuntimeFacts
 ) {
 
   public enum EqualityFunction {
@@ -56,6 +57,10 @@ public record Config(
 
   public boolean hybridIncludeRawEventsOrDefault() {
     return hybridIncludeRawEvents != null && hybridIncludeRawEvents;
+  }
+
+  public boolean hybridEnableRuntimeFactsOrDefault() {
+    return hybridEnableRuntimeFacts == null || hybridEnableRuntimeFacts;
   }
 
   public EqualityFunction usedEqualityOrDefault() {

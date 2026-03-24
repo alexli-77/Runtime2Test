@@ -284,11 +284,14 @@ public class Generation {
       throw new IOException("Missing static snapshot: " + staticSnapshot.toAbsolutePath());
     }
 
-    String runtimeFacts = new RuntimeFactsBuilder().buildFacts(
+    String runtimeFacts = "";
+    if (config.hybridEnableRuntimeFactsOrDefault()) {
+      runtimeFacts = new RuntimeFactsBuilder().buildFacts(
         dataPath,
         config.hybridMaxMethodsOrDefault(),
         config.hybridMaxFactsPerMethodOrDefault()
-    );
+      );
+    }
 
     LlmTestResponse response = new HybridLlmClient().generateTests(
         URI.create(config.llmEndpoint()),
