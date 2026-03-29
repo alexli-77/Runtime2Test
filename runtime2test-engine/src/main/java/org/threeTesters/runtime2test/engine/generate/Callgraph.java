@@ -66,12 +66,28 @@ public class Callgraph {
     if (method.getBody() == null) {
       return;
     }
+    String ownerTypeName = type.getQualifiedName();
+    if (ownerTypeName == null) {
+      return;
+    }
+
     for (var invocation : method.getBody().getElements(new TypeFilter<>(CtInvocation.class))) {
-      CtTypeReference<?> declaringType = invocation.getExecutable().getDeclaringType();
-      if (!declaringType.getQualifiedName().equals(type.getQualifiedName())) {
+      var executableReference = invocation.getExecutable();
+      if (executableReference == null) {
         continue;
       }
-      CtExecutable<?> executable = invocation.getExecutable().getExecutableDeclaration();
+
+      CtTypeReference<?> declaringType = executableReference.getDeclaringType();
+      if (declaringType == null) {
+        continue;
+      }
+
+      String declaringTypeName = declaringType.getQualifiedName();
+      if (declaringTypeName == null || !declaringTypeName.equals(ownerTypeName)) {
+        continue;
+      }
+
+      CtExecutable<?> executable = executableReference.getExecutableDeclaration();
       if (!(executable instanceof CtMethod<?> called)) {
         continue;
       }

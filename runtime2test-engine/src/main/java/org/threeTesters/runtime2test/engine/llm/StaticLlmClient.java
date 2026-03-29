@@ -13,6 +13,10 @@ import java.util.Objects;
 
 public class StaticLlmClient {
 
+  private static final String NGROK_SKIP_WARNING_HEADER = "ngrok-skip-browser-warning";
+  private static final String NGROK_SKIP_WARNING_VALUE =
+      System.getProperty("rtf.ngrokSkipBrowserWarning", "69420");
+
   private final HttpClient httpClient;
   private final Json json;
 
@@ -47,6 +51,7 @@ public class StaticLlmClient {
         HttpRequest request = HttpRequest.newBuilder(endpoint)
             .timeout(Duration.ofMillis(timeoutMs))
             .header("Content-Type", "application/json")
+          .header(NGROK_SKIP_WARNING_HEADER, NGROK_SKIP_WARNING_VALUE)
             .POST(HttpRequest.BodyPublishers.ofString(json.toJson(payload)))
             .build();
 

@@ -257,7 +257,7 @@ public class Generation {
     }
 
     LlmTestResponse response = new StaticLlmClient().generateTests(
-        URI.create(config.llmEndpoint()),
+      parseLlmEndpoint(config.llmEndpoint()),
         projectPath,
         staticSnapshot,
         config.usedEqualityOrDefault().name(),
@@ -294,7 +294,7 @@ public class Generation {
     }
 
     LlmTestResponse response = new HybridLlmClient().generateTests(
-        URI.create(config.llmEndpoint()),
+      parseLlmEndpoint(config.llmEndpoint()),
         projectPath,
         staticSnapshot,
         runtimeFacts,
@@ -336,6 +336,18 @@ public class Generation {
       Files.writeString(out, file.content() == null ? "" : file.content());
       System.out.println("Writing " + out.toAbsolutePath());
     }
+  }
+
+  private static URI parseLlmEndpoint(String endpoint) {
+    if (endpoint == null || endpoint.isBlank()) {
+      throw new IllegalArgumentException("llmEndpoint is blank");
+    }
+
+    String normalized = endpoint.trim();
+    if (!normalized.contains("://")) {
+      normalized = "https://" + normalized;
+    }
+    return URI.create(normalized);
   }
 
   private static void tryAddMethod(Runnable creationAction) {
