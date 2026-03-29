@@ -73,7 +73,10 @@ public class StaticDataCollector {
   ) {
     CtMethod<?> method = candidate.spoonMethod();
     RecordedMethod recorded = candidate.recordingCandidate().toRecordedMethod();
-    String declaringType = method.getDeclaringType().getQualifiedName();
+    String declaringType = "<unknown>";
+    if (method.getDeclaringType() != null && method.getDeclaringType().getQualifiedName() != null) {
+      declaringType = method.getDeclaringType().getQualifiedName();
+    }
     Callgraph callgraph = callgraphsByType.get(declaringType);
 
     List<String> callers = callgraph == null
@@ -105,7 +108,12 @@ public class StaticDataCollector {
   }
 
   private static String methodId(CtMethod<?> method) {
-    return method.getDeclaringType().getQualifiedName()
+    String declaringType = "<unknown>";
+    if (method.getDeclaringType() != null && method.getDeclaringType().getQualifiedName() != null) {
+      declaringType = method.getDeclaringType().getQualifiedName();
+    }
+
+    return declaringType
            + "#"
            + method.getSimpleName()
            + "("

@@ -3,7 +3,7 @@
   "ignoreCoverage": true,
   "usedEquality": "ASSERT_J_DEEP",
   "generationMode": "HYBRID_DYNAMIC",
-  "llmEndpoint": "https://your-colab-endpoint/generation",
+  "llmEndpoint": "https://explicable-inga-unapprehendably.ngrok-free.dev/generation",
   "llmTimeoutMs": 60000,
   "llmMaxRetry": 2,
   "hybridMaxMethods": 100,
