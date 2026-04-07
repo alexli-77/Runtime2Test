@@ -3,7 +3,7 @@
   "ignoreCoverage": true,
   "usedEquality": "ASSERT_J_DEEP",
   "generationMode": "HYBRID_DYNAMIC",
-  "llmEndpoint": "https://your-colab-endpoint/generation",
+  "llmEndpoint": "https://sharing-medicines-browse-attraction.trycloudflare.com/generation",
   "llmTimeoutMs": 60000,
   "llmMaxRetry": 2,
   "hybridMaxMethods": 100,
