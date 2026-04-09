@@ -1,13 +1,22 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 trap 'trap - SIGTERM && kill -- -$$' SIGINT SIGTERM EXIT
 
 run() {
-    /usr/lib/jvm/java-17-openjdk/bin/java \
+    local java_bin="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+    local app_jar
+    app_jar=$(ls app/target/pdfbox-app-*.jar 2>/dev/null | head -n 1)
+
+    if [[ -z "$app_jar" ]]; then
+        echo "Could not find app/target/pdfbox-app-*.jar. Build pdfbox first." >&2
+        return 1
+    fi
+
+    "$java_bin" \
         `#'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'` \
         -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints \
         "$1" \
-        -jar app/target/pdfbox-app-3.0.0-RC1.jar "${@:2}"
+        -jar "$app_jar" "${@:2}"
 }
 
 rm -f CodeMonkey-*.pdf CodeMonkey*.jpg Merged.pdf
