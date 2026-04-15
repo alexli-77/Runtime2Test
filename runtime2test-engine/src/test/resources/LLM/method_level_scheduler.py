@@ -357,6 +357,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--top-k", type=int, default=0, help="Only process top-k methods by invocation count; 0 means all")
     parser.add_argument("--method-filter", default="", help="Only process methods containing this substring")
+    parser.add_argument("--method-list", default="", help="Path to a text file with one method_id per line; overrides --method-filter and --top-k")
     parser.add_argument("--max-facts-per-method", type=int, default=20)
     parser.add_argument("--related-limit", type=int, default=12, help="How many related methods to keep in static subset")
     parser.add_argument("--timeout-sec", type=int, default=120)
@@ -395,12 +396,17 @@ def main() -> int:
     per_method_facts, total_invocations = load_invocation_facts(invocations_path, args.max_facts_per_method)
 
     method_ids = list(method_map.keys())
-    if args.method_filter:
-        method_ids = [mid for mid in method_ids if args.method_filter in mid]
 
-    method_ids.sort(key=lambda mid: per_method_facts.get(mid, MethodFacts()).invocation_count, reverse=True)
-    if args.top_k > 0:
-        method_ids = method_ids[: args.top_k]
+    if args.method_list:
+        allowed = set(Path(args.method_list).read_text(encoding="utf-8").splitlines())
+        allowed = {m.strip() for m in allowed if m.strip()}
+        method_ids = [mid for mid in method_ids if mid in allowed]
+    else:
+        if args.method_filter:
+            method_ids = [mid for mid in method_ids if args.method_filter in mid]
+        method_ids.sort(key=lambda mid: per_method_facts.get(mid, MethodFacts()).invocation_count, reverse=True)
+        if args.top_k > 0:
+            method_ids = method_ids[: args.top_k]
 
     print(f"Methods to process: {len(method_ids)}")
 
