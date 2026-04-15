@@ -57,10 +57,16 @@ class MethodFacts:
     nested_calls: int = 0
     mocked_calls: int = 0
     parameter_shapes: list[str] | None = None
+    returned_values: list[str] | None = None
+    parameter_values: list[list[str]] | None = None
 
     def __post_init__(self) -> None:
         if self.parameter_shapes is None:
             self.parameter_shapes = []
+        if self.returned_values is None:
+            self.returned_values = []
+        if self.parameter_values is None:
+            self.parameter_values = []
 
 
 def load_invocation_facts(invocations_path: Path, max_shapes: int) -> tuple[dict[str, MethodFacts], int]:
@@ -107,6 +113,23 @@ def load_invocation_facts(invocations_path: Path, max_shapes: int) -> tuple[dict
             )
             if shape and shape not in facts.parameter_shapes and len(facts.parameter_shapes) < max(1, max_shapes):
                 facts.parameter_shapes.append(shape)
+
+            # Collect real returned values (up to 5 unique)
+            returned = rec.get("returned")
+            if returned:
+                stmts = returned.get("statements") or []
+                for s in stmts:
+                    if s and s not in facts.returned_values and len(facts.returned_values) < 5:
+                        facts.returned_values.append(s)
+
+            # Collect real parameter values (up to 5 unique invocations)
+            if params and len(facts.parameter_values) < 5:
+                param_vals = [
+                    (p.get("statements") or [None])[0]
+                    for p in params if isinstance(p, dict)
+                ]
+                if param_vals and param_vals not in facts.parameter_values:
+                    facts.parameter_values.append(param_vals)
 
     return per_method, total
 
@@ -158,6 +181,8 @@ def build_runtime_facts_payload(
                 "nestedCalls": facts.nested_calls,
                 "mockedCalls": facts.mocked_calls,
                 "parameterShapes": facts.parameter_shapes,
+                "returnedValues": facts.returned_values,
+                "parameterValues": facts.parameter_values,
             }
         ],
         "eventCounts": {},
