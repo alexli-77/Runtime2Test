@@ -236,6 +236,51 @@ def run_validation(validate_cmd_tpl: str, test_file: Path, method_id: str) -> tu
     return proc.returncode == 0, proc.stdout
 
 
+def _extract_test_methods_from_java(content: str) -> list[str]:
+    """Extract individual @Test method blocks from a Java file string."""
+    first = content.find("@Test")
+    if first == -1:
+        return []
+    body = content[first:]
+    # Remove trailing class closing brace if present
+    body = body.rstrip()
+    if body.endswith("}"):
+        body = body[:-1].rstrip()
+    parts = re.split(r'(?=@Test)', body)
+    methods = []
+    for part in parts:
+        part = part.strip()
+        if part.startswith("@Test") and "{" in part:
+            methods.append(part)
+    return methods
+
+
+def _merge_java_samples(samples: list[str]) -> str:
+    """Merge multiple HybridRockyTest Java strings into one, deduplicating by method name."""
+    seen_names: set[str] = set()
+    unique_methods: list[str] = []
+    for sample in samples:
+        for method_block in _extract_test_methods_from_java(sample):
+            name_match = re.search(r'void\s+(\w+)\s*\(', method_block)
+            name = name_match.group(1) if name_match else None
+            if name and name in seen_names:
+                continue
+            if name:
+                seen_names.add(name)
+            unique_methods.append(method_block)
+    if not unique_methods:
+        return samples[0] if samples else ""
+    indented = "\n\n    ".join(m.replace("\n", "\n    ") for m in unique_methods)
+    return (
+        "package se.kth.castor.generated;\n\n"
+        "import org.junit.jupiter.api.Test;\n"
+        "import static org.junit.jupiter.api.Assertions.*;\n\n"
+        "public class HybridRockyTest {\n\n"
+        f"    {indented}\n\n"
+        "}"
+    )
+
+
 def process_one_method(
     endpoint: str,
     method_id: str,
@@ -252,6 +297,7 @@ def process_one_method(
     related_limit: int,
     timeout_sec: int,
     validate_cmd_tpl: str | None,
+    samples_per_method: int = 1,
 ) -> dict[str, Any]:
     method_out_dir = out_root / _method_folder(method_id)
     method_out_dir.mkdir(parents=True, exist_ok=True)
@@ -276,28 +322,58 @@ def process_one_method(
             }
         )
 
-    try:
-        response = post_json(endpoint, payload, timeout_sec)
-    except (error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+    # ── Multi-sample generation ──────────────────────────────────────────────
+    collected_java: list[str] = []
+    for sample_idx in range(max(1, samples_per_method)):
+        try:
+            response = post_json(endpoint, payload, timeout_sec)
+        except (error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            if sample_idx == 0:
+                return {
+                    "methodId": method_id,
+                    "success": False,
+                    "message": f"request failed: {exc}",
+                    "writtenFiles": [],
+                    "repaired": False,
+                    "samplesCollected": 0,
+                }
+            break  # partial success: use what we have
+
+        if not bool(response.get("success", False)):
+            if sample_idx == 0:
+                return {
+                    "methodId": method_id,
+                    "success": False,
+                    "message": f"llm rejected: {response.get('message', '')}",
+                    "writtenFiles": [],
+                    "repaired": False,
+                    "samplesCollected": 0,
+                }
+            break
+
+        for f in response.get("files") or []:
+            content = f.get("content") or ""
+            if content.strip():
+                collected_java.append(content)
+
+    if not collected_java:
         return {
             "methodId": method_id,
             "success": False,
-            "message": f"request failed: {exc}",
+            "message": "no content in any sample",
             "writtenFiles": [],
             "repaired": False,
+            "samplesCollected": 0,
         }
 
-    if not bool(response.get("success", False)):
-        return {
-            "methodId": method_id,
-            "success": False,
-            "message": f"llm rejected: {response.get('message', '')}",
-            "writtenFiles": [],
-            "repaired": False,
-        }
+    # Merge all samples into one file with deduplicated @Test methods
+    if len(collected_java) > 1:
+        merged_content = _merge_java_samples(collected_java)
+    else:
+        merged_content = collected_java[0]
 
-    files = response.get("files") or []
-    written = write_files(method_out_dir, files)
+    merged_files = [{"relativePath": "se/kth/castor/generated/HybridRockyTest.java", "content": merged_content}]
+    written = write_files(method_out_dir, merged_files)
     repaired = False
 
     if validate_cmd_tpl:
@@ -321,6 +397,7 @@ def process_one_method(
                     "message": f"repair request failed: {exc}",
                     "writtenFiles": [str(p) for p in written],
                     "repaired": repaired,
+                    "samplesCollected": len(collected_java),
                 }
 
             if not bool(repaired_resp.get("success", False)):
@@ -330,6 +407,7 @@ def process_one_method(
                     "message": f"repair rejected: {repaired_resp.get('message', '')}",
                     "writtenFiles": [str(p) for p in written],
                     "repaired": repaired,
+                    "samplesCollected": len(collected_java),
                 }
 
             repair_files = repaired_resp.get("files") or []
@@ -340,9 +418,10 @@ def process_one_method(
     return {
         "methodId": method_id,
         "success": True,
-        "message": "ok",
+        "message": f"ok ({len(collected_java)} samples)",
         "writtenFiles": [str(p) for p in written],
         "repaired": repaired,
+        "samplesCollected": len(collected_java),
     }
 
 
@@ -371,6 +450,12 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--manifest", default="manifest.json", help="Manifest file name under output-dir")
+    parser.add_argument(
+        "--samples-per-method",
+        type=int,
+        default=1,
+        help="Number of independent samples to generate per method (results are merged/deduplicated). Default: 1",
+    )
     return parser.parse_args()
 
 
@@ -432,6 +517,7 @@ def main() -> int:
                 args.related_limit,
                 args.timeout_sec,
                 args.validate_cmd or None,
+                args.samples_per_method,
             )
             for mid in method_ids
         ]
