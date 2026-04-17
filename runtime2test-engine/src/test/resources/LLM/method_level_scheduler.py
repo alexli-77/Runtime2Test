@@ -374,6 +374,12 @@ def process_one_method(
 
     merged_files = [{"relativePath": "se/kth/castor/generated/HybridRockyTest.java", "content": merged_content}]
     written = write_files(method_out_dir, merged_files)
+
+    # Write method metadata so merge_tests_by_class.py can resolve class/package reliably
+    (method_out_dir / "method_meta.json").write_text(
+        json.dumps({"methodId": method_id}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     repaired = False
 
     if validate_cmd_tpl:
