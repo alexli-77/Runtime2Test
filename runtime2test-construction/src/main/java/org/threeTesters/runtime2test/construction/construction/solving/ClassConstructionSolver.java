@@ -130,8 +130,6 @@ public class ClassConstructionSolver {
         actionToVars.put(action, context.mkBoolConst(name));
       }
 
-      // Field creations:
-      //   e.g. first => (constructor | assignFirst  | setFirst )
       for (CtField<?> field : current.fields()) {
         List<Expr<BoolSort>> settingActions = current.actions()
             .stream()
@@ -153,8 +151,6 @@ public class ClassConstructionSolver {
         }
       }
 
-      // ensure an instance is created
-      //   e.g. (constructor | defaultConstructor)
       Set<Action> constructingActions = current.actions()
           .stream()
           .filter(Action::constructsInstance)
@@ -166,8 +162,6 @@ public class ClassConstructionSolver {
       ));
 
       if (constructingActions.size() > 1) {
-        // Only allow a single constructing action
-        //  every possible pair has at most one set to true
         Sets
             .combinations(constructingActions, 2)
             .stream()
@@ -178,7 +172,6 @@ public class ClassConstructionSolver {
             .forEach(optimize::Add);
       }
 
-      // Cost of used elements
       var cost = context.mkAdd(
           current.actions()
               .stream()
@@ -208,7 +201,6 @@ public class ClassConstructionSolver {
       List<Action> usedActions = actionToVars.entrySet().stream()
           .filter(entry -> model.getConstInterp(entry.getValue()).isTrue())
           .map(Entry::getKey)
-          // Move the ones needing an instance to the front
           .sorted(
               Comparator.comparing(Action::needsInstance)
                   .thenComparing(action -> action.handledFields()

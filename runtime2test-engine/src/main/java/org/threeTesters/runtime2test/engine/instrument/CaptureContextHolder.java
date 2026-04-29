@@ -328,19 +328,6 @@ public class CaptureContextHolder {
         id = NEW_MOCK_COUNTER.getAndIncrement();
         mappingParent.registerObject("mock:" + suggestedName, value, id);
       }
-      // FIXME: Delete
-      if (value != null) {
-        try {
-          Files.writeString(
-              AgentMain.dataPath.resolve("mocked.txt"),
-              value.getClass().getName() + "\n",
-              StandardOpenOption.CREATE,
-              StandardOpenOption.APPEND
-          );
-        } catch (IOException ex) {
-          throw new RuntimeException(ex);
-        }
-      }
 
       return factory.createLocalVariable(
           assigned,

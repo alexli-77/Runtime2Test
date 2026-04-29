@@ -76,8 +76,6 @@ public class Statistics {
     other.structureBased.merge(structureBased);
     other.mixed.merge(mixed);
 
-    // Commented out sometimes for whatever reason?
-    // Some bug collection statistics for both in parallel IIRC?
     other.traceBased.merge(traceBased);
     other.general.merge(general);
   }
@@ -535,7 +533,6 @@ public class Statistics {
     @Override
     public void serialize(Statistics value, JsonGenerator gen, SerializerProvider serializers)
         throws IOException {
-      System.out.println("CALLED");
       gen.writeStartObject();
 
       gen.writeObjectFieldStart("structure");
@@ -748,7 +745,7 @@ public class Statistics {
       Map<String, Long> convertedDurationCounts = new HashMap<>();
       Iterator<Entry<String, JsonNode>> durationCounts = node.get("durationCounts").fields();
       while (durationCounts.hasNext()) {
-        Entry<String, JsonNode> next = durations.next();
+        Entry<String, JsonNode> next = durationCounts.next();
         convertedDurationCounts.put(next.getKey(), next.getValue().asLong());
       }
 
