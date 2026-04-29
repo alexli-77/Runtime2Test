@@ -20,7 +20,8 @@ public record Config(
   Integer hybridMaxMethods,
   Integer hybridMaxFactsPerMethod,
   Boolean hybridIncludeRawEvents,
-  Boolean hybridEnableRuntimeFacts
+  Boolean hybridEnableRuntimeFacts,
+  Boolean collectOnly
 ) {
 
   public enum EqualityFunction {
@@ -65,5 +66,9 @@ public record Config(
 
   public EqualityFunction usedEqualityOrDefault() {
     return usedEquality == null ? EqualityFunction.JUNIT : usedEquality;
+  }
+
+  public boolean collectOnlyOrDefault() {
+    return collectOnly != null && collectOnly;
   }
 }

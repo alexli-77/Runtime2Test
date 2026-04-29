@@ -14,7 +14,6 @@ import spoon.reflect.declaration.CtParameter;
 
 public record ActionCallFactoryMethod(
     CtMethod<?> method,
-    // TODO: Might not want a field there but another value (e.g. a temporary)
     Map<CtParameter<?>, List<CtField<?>>> parameters
 ) implements Action {
 

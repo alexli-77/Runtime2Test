@@ -62,7 +62,6 @@ public class MutationCallSimpleFactoryMethod implements MutationStrategy {
       List<CtParameter<?>> passedFactoryMethodParameters = new ArrayList<>();
       for (CtExpression<?> argument : call.getArguments()) {
         if (!(argument instanceof CtVariableRead<?> variableRead)) {
-          // FIXME: Implement indirect passing of factory method parameters to constructor
           continue outer;
         }
         if (!(variableRead.getVariable().getDeclaration() instanceof CtParameter<?> parameter)) {

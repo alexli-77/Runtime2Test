@@ -2,7 +2,7 @@
   "filterTests": true,
   "ignoreCoverage": true,
   "usedEquality": "ASSERT_J_DEEP",
-  "projectPath": "C:/Software Engineering/pdfbox",
+  "projectPath": "/Users/files/code/github/pdfbox",
   "methodsJson": "rtf/methods.json",
   "dataPath": "rtf/data",
   "testBasePath": "rtf/generated-tests/src/test/java",

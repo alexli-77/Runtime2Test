@@ -133,7 +133,7 @@ public class MutationTracingContextHolder {
     long timestamp = getNextTimestamp();
     Integer receiverId = OBJECT_IDS.get(receiver);
     if (receiverId == null) {
-      System.out.println("Field receiver was unknown " + receiver.getClass() + " @ " + timestamp);
+      System.err.println("Field receiver was unknown " + receiver.getClass() + " @ " + timestamp);
       return;
     }
     Integer newValueId = OBJECT_IDS.get(newValue);
@@ -157,7 +157,7 @@ public class MutationTracingContextHolder {
     long timestamp = getNextTimestamp();
     Integer receiverId = OBJECT_IDS.get(receiver);
     if (receiverId == null) {
-      System.out.println("Mutator receiver was unknown: " + receiver.getClass());
+      System.err.println("Mutator receiver was unknown: " + receiver.getClass());
       return;
     }
     CallMutatorEvent event = new CallMutatorEvent(timestamp, receiverId);
@@ -168,7 +168,7 @@ public class MutationTracingContextHolder {
     long timestamp = getNextTimestamp();
     Integer receiverId = receiver == null ? Integer.valueOf(-1) : OBJECT_IDS.get(receiver);
     if (receiverId == null) {
-      System.out.println("Method receiver was unknown " + receiver.getClass() + " @ " + timestamp);
+      System.err.println("Method receiver was unknown " + receiver.getClass() + " @ " + timestamp);
       return -1;
     }
     CallMethodStartEvent event = new CallMethodStartEvent(
@@ -457,7 +457,7 @@ public class MutationTracingContextHolder {
         if (!snippet.statements().isEmpty()) {
           return new SerializedValue(Classes.className(o.getClass()), null, snippet);
         }
-        System.out.println("FAIL FOR " + o.getClass() + " AS NO ID");
+        System.err.println("FAIL FOR " + o.getClass() + " AS NO ID");
         return new FailedValue(o.getClass().getName());
       }
 
@@ -602,12 +602,12 @@ public class MutationTracingContextHolder {
     thread.start();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       try {
-        System.out.println("Shutting down " + thread.getName());
+        System.err.println("Shutting down " + thread.getName());
         EVENT_QUEUE.setRelease(null);
         shutdownRequested.set(true);
         thread.interrupt();
         thread.join(5000);
-        System.out.println("Shutdown completed for " + thread.getName());
+        System.err.println("Shutdown completed for " + thread.getName());
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
@@ -631,18 +631,18 @@ public class MutationTracingContextHolder {
                 writer.newLine();
               } catch (InterruptedException ignored1) {
                 // just check again
-                System.out.println(Thread.currentThread().getName() + " was interrupted");
+                System.err.println(Thread.currentThread().getName() + " was interrupted");
               }
             }
           } catch (Throwable e) {
             e.printStackTrace();
             // Not much we can do...
-            System.err.flush();
+            System.out.flush();
             Runtime.getRuntime().halt(1);
           }
         }
 
-        System.out.println(
+        System.err.println(
             Thread.currentThread().getName() + " is done. Queue size: " + queue.size()
         );
       }

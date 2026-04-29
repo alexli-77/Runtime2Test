@@ -162,6 +162,17 @@ public class Main {
 
     addStatDuration(statistics, "executeProduction", productionRunStart);
 
+    if (config.collectOnlyOrDefault()) {
+      System.err.println(heading("Collection-only mode enabled: skipping test generation"));
+      if (statistics != null) {
+        Files.writeString(
+            dataPath.resolve("stats.json"),
+            new Json().prettyPrint(statistics)
+        );
+      }
+      return;
+    }
+
     System.err.println(heading("Generating test"));
     System.out.println("testBasePath = " + testBasePath);
     Instant generateStart = Instant.now();

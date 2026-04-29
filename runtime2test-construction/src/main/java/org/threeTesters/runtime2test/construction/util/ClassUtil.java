@@ -117,7 +117,6 @@ public final class ClassUtil {
         );
       }
 
-      // Record our chain in the constructor
       constructors
           .computeIfAbsent(constructorNode.constructor(), ConstructorMapping::new)
           .merge(paramMap);

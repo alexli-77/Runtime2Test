@@ -200,8 +200,12 @@ public class Generation {
     addStatDuration(statistics, "generateTests", generateTestsStart);
 
     objPerTest.sort(Comparator.naturalOrder());
-    System.out.println(objPerTest);
-    System.out.println("I got median of " + objPerTest.get(objPerTest.size() / 2));
+    if (objPerTest.isEmpty()) {
+      System.out.println("No candidate tests were produced during generation.");
+    } else {
+      System.out.println(objPerTest);
+      System.out.println("I got median of " + objPerTest.get(objPerTest.size() / 2));
+    }
 
     for (JunitTestClass testClass : loadedInvocations.keySet()) {
       if (equality == EqualityFunction.DEEP_REFLECTIVE) {
@@ -210,9 +214,12 @@ public class Generation {
       }
     }
 
-    try (Stream<Path> paths = Files.walk(testBasePath)) {
-      for (Path path : paths.filter(it -> it.toString().endsWith("RockyTest.java")).toList()) {
-        Files.delete(path);
+    Files.createDirectories(testBasePath);
+    if (Files.exists(testBasePath)) {
+      try (Stream<Path> paths = Files.walk(testBasePath)) {
+        for (Path path : paths.filter(it -> it.toString().endsWith("RockyTest.java")).toList()) {
+          Files.delete(path);
+        }
       }
     }
     Files.deleteIfExists(testBasePath.resolve(ASSERTJ_HELPER_PATH));
@@ -315,9 +322,12 @@ public class Generation {
   }
 
   private static void clearGeneratedTests(Path testBasePath) throws IOException {
-    try (Stream<Path> paths = Files.walk(testBasePath)) {
-      for (Path path : paths.filter(it -> it.toString().endsWith("RockyTest.java")).toList()) {
-        Files.delete(path);
+    Files.createDirectories(testBasePath);
+    if (Files.exists(testBasePath)) {
+      try (Stream<Path> paths = Files.walk(testBasePath)) {
+        for (Path path : paths.filter(it -> it.toString().endsWith("RockyTest.java")).toList()) {
+          Files.delete(path);
+        }
       }
     }
   }

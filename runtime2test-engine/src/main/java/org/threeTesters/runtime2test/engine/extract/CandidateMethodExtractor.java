@@ -31,10 +31,7 @@ public class CandidateMethodExtractor extends CtScanner {
     if (m.getBody() != null && !m.isAbstract() && !m.isStatic()) {
       totalMethodCount += 1;
     }
-    // FIXME: Remove
-    if (m.getType().equals(m.getFactory().Type().VOID_PRIMITIVE)) {
-//      return;
-    }
+
     if (m.getBody() != null && m.getBody().getStatements().size() == 1) {
       return;
     }
@@ -49,17 +46,14 @@ public class CandidateMethodExtractor extends CtScanner {
       return;
     }
 
-    //    - is `abstract`
     if (m.isAbstract()) {
       return;
     }
 
-    //    - is `static`
     if (m.isStatic()) {
       return;
     }
 
-    //    - is `@Deprecated`
     if (isDeprecated(m)) {
       return;
     }

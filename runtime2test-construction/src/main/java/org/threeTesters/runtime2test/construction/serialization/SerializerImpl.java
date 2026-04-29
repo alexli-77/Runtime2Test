@@ -167,7 +167,6 @@ final class SerializerImpl {
 
   Serialized serialize() throws SerializationFailedException {
     if (object != null && object.getClass().isSynthetic()) {
-      System.out.println("SKIPPED SYNTHETIC " + object);
       throw new SolveFailedException(object.getClass(), objectClass);
     }
     if (object == null || ClassUtil.isBasicallyPrimitive(object.getClass())) {
@@ -620,7 +619,6 @@ final class SerializerImpl {
       );
     }
     for (CtParameter<?> parameter : callConstructor.constructor().getParameters()) {
-      // They all map to the same, pick a random one
       call.addArgument(getFieldValue(callConstructor.parameters().get(parameter).get(0), object));
     }
     return createMyVariable(
@@ -749,7 +747,6 @@ final class SerializerImpl {
     try {
       Field field = ctField.getDeclaringType().getActualClass()
           .getDeclaredField(ctField.getSimpleName());
-      // A bit risky, but what can you do. We only read, which makes this slightly better.
       field.setAccessible(true);
 
       Object value = field.get(handle);
@@ -794,7 +791,6 @@ final class SerializerImpl {
             complexValueNameMap
         );
 
-        // First serialize that object before we do anything else with our life
         // TODO: Should we put nested objects before any of our statements?
         statements.addAll(nestedSerializer.serialize().statements());
       } else {
@@ -810,7 +806,6 @@ final class SerializerImpl {
       }
     }
 
-    // We already built a variable for this object, return a reference to it
     return factory.createVariableRead(
         factory.Core().createLocalVariableReference().setSimpleName(complexValueNameMap.get(value)),
         false
