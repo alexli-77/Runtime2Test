@@ -1,5 +1,6 @@
 <div align="center">
   <h1>Runtime2Test</h1>
+  <img src="docs/assets/runtime2test-banner.png" alt="Runtime2Test" width="700">
 </div>
 
 `Runtime2Test` is a tool that automatically converts real-world Java object behaviors during runtime into replayable test code. We utilize a combined approach of ProDJ + LLM. The objective is to generate test cases that are grounded in production-level workloads and realistic scenarios.
@@ -332,5 +333,4 @@ python3 merge_tests_by_class.py \
 The current integration supports any HTTP-compatible LLM service. An example adapter for CodeT5-base (a Transformer-based model for code generation by Salesforce) is provided at `runtime2test-engine/src/test/resources/LLM/runtime2test_adapter_example.py`.
 
 Reference: [Wang, Yue, et al. "CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation."](https://aclanthology.org/2021.emnlp-main.685.pdf) EMNLP 2021.
-
 
